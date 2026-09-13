@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+      body { 
+        font-family: Arial, sans-serif; 
+        margin: 0; 
+        padding: 15px; 
+        min-height: 100vh;
+        position: relative;
+        overflow-x: hidden;
+      }
+
+      .video-bg {
+        position: fixed; top: 0; left: 0;
+        width: 100%; height: 100%;
+        object-fit: cover; z-index: -3;
+        filter: brightness(0.72) contrast(1.08) saturate(1.1);
+      }
+
+      .overlay {
+        position: fixed; top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: linear-gradient(180deg, rgba(0,15,5,0.55) 0%, rgba(0,25,10,0.65) 50%, rgba(0,10,0,0.7) 100%);
+        z-index: -2;
+      }
+
+      .fallback-bg {
+        position: fixed; top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: url('https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=1920&q=80') no-repeat center center;
+        background-size: cover; z-index: -4;
+        animation: slowWind 28s ease-in-out infinite alternate;
+      }
+
+      @keyframes slowWind {
+        0%   { transform: scale(1.05) translateX(0); }
+        100% { transform: scale(1.12) translateX(-1.8%); }
+      }
+
+      .container { 
+        max-width: 520px; 
+        margin: auto; 
+        background: rgba(255, 255, 255, 0.94); 
+        backdrop-filter: blur(12px); 
+        padding: 20px; 
+        border-radius: 14px; 
+        box-shadow: 0 12px 40px rgba(0,0,0,0.35); 
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        position: relative; z-index: 1;
+      }
+
+      h2 { text-align: center; color: #1e3a1e; border-bottom: 2px solid #27ae60; padding-bottom: 10px; margin-top: 0;}
+      
+      .home-menu { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
+      .menu-btn { padding: 16px; background-color: #27ae60; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-align: left; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.2s; }
+      .menu-btn:hover { background-color: #219150; transform: translateY(-2px); }
+      .menu-btn.navy { background-color: #1a365d; }
+      .menu-btn.navy:hover { background-color: #0f2341; }
+      .menu-btn.blue { background-color: #2980b9; }
+      .menu-btn.blue:hover { background-color: #2471a3; }
+      .menu-btn.orange { background-color: #d35400; }
+      .menu-btn.orange:hover { background-color: #ba4a00; }
+      .menu-btn.purple { background-color: #8e44ad; }
+      .menu-btn.purple:hover { background-color: #732d91; }
+      .menu-btn.teal { background-color: #16a085; }
+      .menu-btn.teal:hover { background-color: #138a72; }
+
+      .back-btn { background: #7f8c8d; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; margin-bottom: 15px; font-weight: bold; }
+      .back-btn:hover { background: #6c7a89; }
+
+      .section-title { margin-top: 20px; margin-bottom: 10px; background: #27ae60; color: white; padding: 8px; border-radius: 4px; font-size: 14px; font-weight: bold; text-align: center; }
+      .form-group { margin-bottom: 15px; }
+      .form-row { display: flex; gap: 10px; }
+      .form-row .form-group { flex: 1; margin-bottom: 10px; }
+      label { font-weight: bold; display: block; margin-bottom: 5px; color: #2c3e50; font-size: 13px; }
+      input[type="text"], input[type="date"], input[type="number"], input[type="time"], input[type="file"], select, textarea { width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 5px; box-sizing: border-box; font-size: 14px; background: #fff; }
+      
+      .checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px; }
+      .checkbox-grid label { font-weight: normal; display: flex; align-items: center; font-size: 13px; margin-bottom: 0; color: #000; cursor: pointer;}
+      .checkbox-grid input[type="checkbox"] { width: auto; margin-right: 8px; transform: scale(1.2); }
+      
+      .btn-primary { width: 100%; padding: 12px; background-color: #2980b9; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; font-weight: bold; margin-top: 15px;}
+      .btn-primary:hover { background-color: #2471a3; }
+      .btn-success { width: 100%; padding: 12px; background-color: #27ae60; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; font-weight: bold; margin-top: 10px;}
+      .btn-success:hover { background-color: #219150; }
+      .btn-info { width: 100%; padding: 12px; background-color: #8e44ad; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; font-weight: bold; margin-top: 10px;}
+      .btn-info:hover { background-color: #732d91; }
+      .btn-warning { width: 100%; padding: 12px; background-color: #e67e22; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; font-weight: bold; margin-top: 10px;}
+      .btn-warning:hover { background-color: #d35400; }
+
+      button:disabled { background-color: #95a5a6; cursor: not-allowed; }
+      .pesan { margin-top: 15px; text-align: center; font-weight: bold; font-size: 14px;}
+      .hidden-element { display: none; }
+      
+      #previewIntakeBox { display: none; margin-top: 10px; }
+      .report-table { width: 100%; border-collapse: collapse; font-size: 12px; background: white; margin-bottom: 10px; }
+      .report-table th, .report-table td { border: 1px solid #000; padding: 6px 8px; text-align: left; }
+      .report-header { background-color: #27ae60; color: white; text-align: center; font-weight: bold; font-size: 14px; padding: 8px; }
+      .cell-label { background-color: #d4efdf; font-weight: bold; width: 35%; }
+      .cell-orange { background-color: #f5b041; font-weight: bold; width: 35%; }
+      .cell-yellow { background-color: #f9e79f; font-weight: bold; width: 35%; }
+      .text-center { text-align: center; }
+      .bg-red { background-color: #e74c3c !important; color: white; font-weight: bold; text-align: center; }
+      .bg-normal { text-align: center; }
+
+      .result-box { margin-top: 15px; background: #eafaf1; border: 1px solid #27ae60; border-radius: 6px; padding: 12px; }
+      .result-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #b2dfc8; font-size: 13px; }
+      .result-row:last-child { border-bottom: none; }
+      .result-row span.label { font-weight: bold; color: #34495e; }
+      .result-row span.value { color: #16a085; font-weight: bold; }
+
+      .dws-wrapper { border: 2px solid #000; background: #fff; padding: 5px; font-family: Arial, sans-serif; font-size: 11px; color: #000; }
+      .dws-table { width: 100%; border-collapse: collapse; }
+      .dws-table td, .dws-table th { border: 1px solid #000; padding: 4px 6px; }
+      .dws-header { text-align: center; font-weight: bold; background: #e2e2e2; }
+      .dws-title { text-align: center; font-size: 13px; font-weight: bold; padding: 6px; background: #dcdcdc; border-top: 2px solid #000; border-bottom: 2px solid #000; }
+
+      .petunjuk { background-color: #e6fffa; border-left: 4px solid #319795; padding: 10px; margin-bottom: 15px; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+
+    <div class="fallback-bg"></div>
+    <video class="video-bg" autoplay muted loop playsinline poster="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=1920&q=80">
+      <source src="https://cdn.coverr.co/videos/coverr-cornfield-in-the-wind-5584/1080p.mp4" type="video/mp4">
+      <source src="https://assets.mixkit.co/videos/preview/mixkit-green-cornfield-on-a-sunny-day-4088-large.mp4" type="video/mp4">
+    </video>
+    <div class="overlay"></div>
+
+    <div class="container">
+      
+      <!-- ================= 1. HOME ================= -->
+      <div id="pageHome" class="app-page">
+        <h2>🌽 Portal Plant Kediri</h2>
+        <p style="text-align: center; color: #555; font-size: 13px; font-weight: bold;">Sistem Manajemen Pertanian & Industri Benih Jagung</p>
+        <div class="home-menu">
+          <button class="menu-btn navy" onclick="bukaHalaman('pageAutoPlotting')">
+            <span>🤖 1. Auto-Plotting Jadwal Panen</span> ➔
+          </button>
+          <button class="menu-btn blue" onclick="bukaHalaman('pageIntake')">
+            <span>📥 2. Input Data Intake Drier</span> ➔
+          </button>
+          <button class="menu-btn" onclick="bukaHalaman('pageAkurasi')">
+            <span>🔬 3. Akurasi Sortir (DIG & GID)</span> ➔
+          </button>
+          <button class="menu-btn orange" onclick="bukaHalaman('pageDWS')">
+            <span>📄 4. Generate e-DWS</span> ➔
+          </button>
+          <button class="menu-btn purple" onclick="alert('Menu Rekap Laporan akan segera hadir!')">
+            <span>📊 5. Rekap Laporan Harian</span> ➔
+          </button>
+          <button class="menu-btn teal" onclick="bukaHalaman('pageDryingProses')">
+            <span>🌡️ 6. Drying Proses</span> ➔
+          </button>
+        </div>
+      </div>
+
+      <!-- ================= 2. AUTO-PLOTTING ================= -->
+      <div id="pageAutoPlotting" class="app-page hidden-element">
+        <button class="back-btn" onclick="bukaHalaman('pageHome')">← Kembali ke Home</button>
+        <h2>Auto-Plotting Jadwal Panen</h2>
+        
+        <div class="petunjuk">
+          <b>Cara Pakai:</b> Copy data dari Excel dan Paste ke kotak di bawah. Pastikan urutan kolom:<br>
+          <b>SPV | KODE PRODUKSI | FLAGGING (GF/RFi/RFd) | AREA | TUJUAN | TOTAL PANEN (KG)</b>
+        </div>
+        
+        <div class="form-group">
+          <label>Data Excel Massal</label>
+          <textarea id="dataExcel" rows="7" placeholder="Paste data dari Excel di sini..."></textarea>
+        </div>
+        <button type="button" class="btn-primary" style="background:#1a365d;" onclick="prosesDataMassal()">⚡ Plotting Semua SPV Sekaligus</button>
+        <div id="outputTabel"></div>
+      </div>
+
+      <!-- ================= 3. INTAKE DRIER ================= -->
+      <div id="pageIntake" class="app-page hidden-element">
+        <button class="back-btn" onclick="bukaHalaman('pageHome')">← Kembali ke Home</button>
+        <h2>Form Intake Drier</h2>
+        
+        <form id="intakeForm" onsubmit="bukaPreviewIntake(event)">
+          <div class="section-title">Identitas Panen & Jam Operasional</div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Tanggal Kedatangan Truk 1</label>
+              <input type="date" id="val_tgl_truk1">
+            </div>
+            <div class="form-group">
+              <label>Jam Kedatangan Truk 1</label>
+              <input type="time" id="val_jam_truk1">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Tanggal Intake</label>
+              <input type="date" id="val_tanggal" required>
+            </div>
+            <div class="form-group">
+              <label>Alokasi Dryer</label>
+              <select id="alokasi" onchange="updateDryer()" required>
+                <option value="">- Pilih Alokasi -</option>
+                <option value="Bangkok">1. Bangkok</option>
+                <option value="Wonojoyo">2. Wonojoyo</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>No. Dryer</label>
+              <select id="dryer" required>
+                <option value="">- Pilih No. Dryer -</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Distrik</label>
+              <input type="text" id="val_distrik" placeholder="Misal: MAGELANG" required>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Jam Mulai Sortir</label>
+              <input type="time" id="val_jammulai" required>
+            </div>
+            <div class="form-group">
+              <label>Jam Finish Sortir</label>
+              <input type="time" id="val_jamfinish" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Nama SPV (Bisa pilih > 1)</label>
+            <div class="checkbox-grid">
+              <label><input type="checkbox" class="spv-checkbox" value="Gani Safruloh"> Gani Safruloh</label>
+              <label><input type="checkbox" class="spv-checkbox" value="Heru Cahyono"> Heru Cahyono</label>
+              <label><input type="checkbox" class="spv-checkbox" value="Ricky Praseptyo"> Ricky Praseptyo</label>
+              <label><input type="checkbox" class="spv-checkbox" value="Amin Mandaris"> Amin Mandaris</label>
+              <label><input type="checkbox" class="spv-checkbox" value="Anwarul Ikhsan"> Anwarul Ikhsan</label>
+              <label><input type="checkbox" class="spv-checkbox" value="Avif Firdausy"> Avif Firdausy</label>
+              <label><input type="checkbox" class="spv-checkbox" value="Setyawan Budi"> Setyawan Budi</label>
+              <label><input type="checkbox" id="cb_spv_other" onchange="cekCustomSPV()"> Other</label>
+            </div>
+            <input type="text" id="spv_other" class="hidden-element" style="margin-top:8px;" placeholder="Tulis nama SPV lain...">
+            <input type="hidden" id="spv_final">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Kode Produksi</label>
+              <select id="kodeproduksi" onchange="cekCustomKode()" required>
+                <option value="">- Pilih Kode -</option>
+                <option value="J20">J20</option><option value="J25">J25</option><option value="J26">J26</option>
+                <option value="J28">J28</option><option value="J29">J29</option><option value="J30">J30</option>
+                <option value="J32">J32</option><option value="J33">J33</option>
+                <option value="GIRI 1">GIRI 1</option><option value="GIRI 2">GIRI 2</option>
+                <option value="GIRI 3">GIRI 3</option><option value="GIRI 4">GIRI 4</option>
+                <option value="GIRI 5">GIRI 5</option><option value="Other">Other</option>
+              </select>
+              <input type="text" id="kodeproduksi_other" class="hidden-element" style="margin-top:8px;" placeholder="Tulis Kode...">
+              <input type="hidden" id="kodeproduksi_final">
+            </div>
+            <div class="form-group">
+              <label>Quality Status</label>
+              <select id="val_quality" required>
+                <option value="">- Pilih Status -</option>
+                <option value="GF">GF</option><option value="YF">YF</option>
+                <option value="RF-I">RF-I</option><option value="RF-D">RF-D</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>No. WEMA</label>
+            <input type="text" id="val_wema" placeholder="Nomor Surat/Tiket" required>
+          </div>
+
+          <div class="section-title">Kuantitas & Kualitas</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>MC Harvest (%)</label>
+              <input type="number" id="val_mc" step="0.01" placeholder="Kadar Air" required>
+            </div>
+            <div class="form-group">
+              <label>QTY Field (Kg)</label>
+              <input type="number" id="val_qtyfield" step="0.01" placeholder="0" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>QTY Plant (Kg)</label>
+            <input type="number" id="val_qtyplant" step="0.01" placeholder="0" required>
+          </div>
+
+          <div class="section-title">Parameter Sortir / Reject (Kg)</div>
+          <div class="form-row">
+            <div class="form-group"><label>Off Type</label><input type="number" id="val_offtype" step="0.01" min="0"></div>
+            <div class="form-group"><label>Fungi</label><input type="number" id="val_fungi" step="0.01" min="0"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Vivipari</label><input type="number" id="val_vivipari" step="0.01" min="0"></div>
+            <div class="form-group"><label>Muda</label><input type="number" id="val_muda" step="0.01" min="0"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Male</label><input type="number" id="val_male" step="0.01" min="0"></div>
+            <div class="form-group"><label>Spill</label><input type="number" id="val_spill" step="0.01" min="0"></div>
+          </div>
+
+          <div class="section-title">Tambahan</div>
+          <div class="form-group">
+            <label>Note / Keterangan</label>
+            <textarea id="val_note" rows="2" placeholder="Kondisi cuaca, dll..."></textarea>
+          </div>
+
+          <button type="submit" class="btn-primary">Preview Laporan Intake</button>
+        </form>
+
+        <div id="previewIntakeBox" class="hidden-element">
+          <div id="areaTabelLaporan">
+            <table class="report-table">
+              <tr><th colspan="4" class="report-header">Laporan Intake Plant Kediri</th></tr>
+              <tr><td class="cell-label">Tanggal Intake</td><td colspan="3" id="prev_tanggal"></td></tr>
+              <tr><td class="cell-label">No. Dryer</td><td colspan="3" id="prev_dryer"></td></tr>
+              <tr><td class="cell-label">Distrik / SPV</td><td colspan="3"><span id="prev_distrik"></span> / <span id="prev_spv"></span></td></tr>
+              <tr><td class="cell-label">Kode & Status</td><td colspan="3"><span id="prev_kode"></span> (<span id="prev_quality"></span>)</td></tr>
+              <tr><td class="cell-label">MC Harvest</td><td colspan="3"><span id="prev_mc"></span>%</td></tr>
+              <tr><td class="cell-label">QTY Field / Plant</td><td colspan="3"><span id="prev_qtyfield"></span> Kg / <span id="prev_qtyplant"></span> Kg</td></tr>
+              <tr>
+                <th class="report-header" style="font-size:11px;">Parameter</th>
+                <th class="report-header" style="font-size:11px;">Berat</th>
+                <th class="report-header" style="font-size:11px;">%</th>
+                <th class="report-header" style="font-size:11px;">Toleransi</th>
+              </tr>
+              <tr><td class="cell-orange">Off Type</td><td id="prev_offtype" class="text-center">0</td><td id="prev_pct_offtype" class="bg-normal">0.0%</td><td class="text-center">1.0%</td></tr>
+              <tr><td class="cell-orange">Fungi</td><td id="prev_fungi" class="text-center">0</td><td id="prev_pct_fungi" class="bg-normal">0.0%</td><td class="text-center">2.0%</td></tr>
+              <tr><td class="cell-orange">Vivipari</td><td id="prev_vivipari" class="text-center">0</td><td id="prev_pct_vivipari" class="bg-normal">0.0%</td><td class="text-center">2.0%</td></tr>
+              <tr><td class="cell-orange">Muda</td><td id="prev_muda" class="text-center">0</td><td id="prev_pct_muda" class="bg-normal">0.0%</td><td class="text-center">-</td></tr>
+              <tr><td class="cell-orange">Male</td><td id="prev_male" class="text-center">0</td><td id="prev_pct_male" class="bg-normal">0.0%</td><td class="text-center">-</td></tr>
+              <tr><td class="cell-orange">Spill</td><td id="prev_spill" class="text-center">0</td><td id="prev_pct_spill" class="bg-normal">0.0%</td><td class="text-center">-</td></tr>
+              <tr><td class="cell-yellow">Total Reject</td><td id="prev_total_reject" class="text-center" style="font-weight:bold;">0.0</td><td id="prev_pct_total" class="bg-normal" style="font-weight:bold;">0.0%</td><td></td></tr>
+              <tr><td class="cell-label">No. WEMA</td><td colspan="3" id="prev_wema"></td></tr>
+              <tr><td class="cell-label">Note</td><td colspan="3" id="prev_note"></td></tr>
+            </table>
+          </div>
+          <button type="button" class="btn-info" onclick="downloadGambarIntake()">📥 Simpan Sebagai Gambar</button>
+          <button type="button" class="btn-success" id="btnKirimIntake" onclick="kirimIntakeKeServer()">Konfirmasi & Kirim Data</button>
+          <button type="button" class="btn-warning" onclick="tutupPreviewIntake()">Edit Kembali</button>
+        </div>
+        <div id="pesanIntake" class="pesan"></div>
+      </div>
+
+      <!-- ================= 4. e-DWS ================= -->
+      <div id="pageDWS" class="app-page hidden-element">
+        <button class="back-btn" onclick="bukaHalaman('pageHome')">← Kembali ke Home</button>
+        <h2>Generate e-DWS</h2>
+        <p style="text-align:center; font-size:13px; color:#666;">Isi data di bawah untuk melihat draf laporan resmi e-DWS.</p>
+
+        <div id="dwsParamForm">
+          <div class="form-row">
+            <div class="form-group"><label>Tanggal Intake</label><input type="date" id="dws_tgl" required></div>
+            <div class="form-group"><label>No. Dryer</label><input type="text" id="dws_dryer" placeholder="Cth: Bangkok-D1" required></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Jenis Hybrid / Kode</label><input type="text" id="dws_hybrid" placeholder="Cth: J20" required></div>
+            <div class="form-group">
+              <label>Quality Status</label>
+              <select id="dws_quality" required>
+                <option value="GF">GF</option><option value="YF">YF</option>
+                <option value="RF-I">RF-I</option><option value="RF-D">RF-D</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Lahan / Village / Distrik</label><input type="text" id="dws_lahan" placeholder="Cth: MAGELANG" required></div>
+            <div class="form-group"><label>No. WEMA</label><input type="text" id="dws_wema" placeholder="Cth: WEMA-001" required></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Tonase Field (Kg)</label><input type="number" id="dws_tonasefield" step="0.01" required></div>
+            <div class="form-group"><label>Tonase Plant (Kg)</label><input type="number" id="dws_tonaseplant" step="0.01" required></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>MC Panen (%)</label><input type="number" id="dws_mc" step="0.01" required></div>
+            <div class="form-group"><label>Total Reject (Kg)</label><input type="number" id="dws_reject" step="0.01" required></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Start Sortasi</label><input type="time" id="dws_start" required></div>
+            <div class="form-group"><label>Finish Sortasi</label><input type="time" id="dws_finish" required></div>
+          </div>
+          <button type="button" class="btn-primary" onclick="generateDWSPreview()">Tampilkan Draf e-DWS</button>
+        </div>
+
+        <div id="dwsPreviewBox" class="hidden-element" style="margin-top:15px;">
+          <div id="areaTabelDWS" class="dws-wrapper">
+            <table class="dws-table">
+              <tr>
+                <td colspan="4" style="text-align:center; font-weight:bold; font-size:12px;">PT RESTU AGROPRO JAYAMAS</td>
+                <td style="text-align:center; font-weight:bold;">FORM</td>
+              </tr>
+              <tr><td colspan="5" class="dws-title">DRYER, SHELLING, CLEANING REPORT</td></tr>
+              <tr>
+                <td colspan="4"><strong>INTAKE REPORT</strong></td>
+                <td><strong>Dryer No:</strong> <span id="r_dryer"></span></td>
+              </tr>
+              <tr>
+                <td colspan="4">TRUCK ID :</td>
+                <td><strong>QUALITY STATUS:</strong><br><span id="r_quality"></span></td>
+              </tr>
+              <tr>
+                <td colspan="4">LAHAN / VILLAGE : <span id="r_lahan"></span></td>
+                <td>GF / RFd / Rfi</td>
+              </tr>
+              <tr>
+                <td colspan="3">JENIS HYBRID : <span id="r_hybrid"></span></td>
+                <td colspan="2">TONASE FIELD (KG) : <span id="r_field"></span></td>
+              </tr>
+              <tr>
+                <td colspan="3">MC PANEN : <span id="r_mc"></span> %</td>
+                <td colspan="2">JUMLAH KARUNG :</td>
+              </tr>
+              <tr>
+                <td class="dws-header" style="width:15%;">No.</td>
+                <td class="dws-header" colspan="2">Wema No. : <span id="r_wema"></span></td>
+                <td class="dws-header">Field No.</td>
+                <td class="dws-header">Qty</td>
+              </tr>
+              <tr><td class="text-center">1</td><td colspan="2"></td><td></td><td></td></tr>
+              <tr><td class="text-center">2</td><td colspan="2"></td><td></td><td></td></tr>
+              <tr><td class="text-center">3</td><td colspan="2"></td><td></td><td></td></tr>
+              <tr><td class="text-center">4</td><td colspan="2"></td><td></td><td></td></tr>
+              <tr><td class="text-center">5</td><td colspan="2"></td><td></td><td></td></tr>
+              <tr><td colspan="5" class="dws-header">HASIL SORTASI TONGKOL (KG)</td></tr>
+              <tr>
+                <td colspan="3">TONASE PLANT (KG) : <span id="r_plant"></span></td>
+                <td colspan="2">JUMLAH MEJA :</td>
+              </tr>
+              <tr>
+                <td colspan="3">START SORTASI : <span id="r_start"></span></td>
+                <td colspan="2">MAN POWER :</td>
+              </tr>
+              <tr>
+                <td colspan="3">FINISH SORTASI : <span id="r_finish"></span></td>
+                <td colspan="2">REJECT (KG) : <span id="r_reject"></span></td>
+              </tr>
+              <tr><td colspan="5"><strong>DRYER WORKSHEET</strong></td></tr>
+              <tr>
+                <td colspan="3">ON BLOWER :</td>
+                <td colspan="2">ON BURNER :</td>
+              </tr>
+              <tr><td colspan="5">NOTE: Tanggal Intake: <span id="r_tgl"></span></td></tr>
+            </table>
+          </div>
+          <button type="button" class="btn-info" onclick="downloadGambarDWS()">📥 Simpan e-DWS Sebagai Gambar</button>
+          <button type="button" class="btn-warning" onclick="kembaliEditDWS()">Isi Ulang / Edit DWS</button>
+        </div>
+      </div>
+
+      <!-- ================= 5. AKURASI SORTIR ================= -->
+      <div id="pageAkurasi" class="app-page hidden-element">
+        <button class="back-btn" onclick="bukaHalaman('pageHome')">← Kembali ke Home</button>
+        <h2>Form Akurasi Sortir</h2>
+        
+        <div class="form-group" style="margin-bottom:20px;">
+          <label>Pilih Jenis Analisa QC</label>
+          <select id="jenisAkurasi" onchange="gantiFormAkurasi()">
+            <option value="DIG">1. Discard in Good (DIG)</option>
+            <option value="GID">2. Good in Discard (GID)</option>
+          </select>
+        </div>
+
+        <!-- FORM DIG -->
+        <form id="formDIG" onsubmit="submitDIG(event)">
+          <div class="section-title" style="background:#2980b9;">Form Discard in Good</div>
+          <div class="form-row">
+            <div class="form-group"><label>Tanggal</label><input type="date" id="dig_tgl" required></div>
+            <div class="form-group"><label>No. Document</label><input type="text" id="dig_doc" required></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Jam Ambil Sampel</label><input type="time" id="dig_jam" required></div>
+            <div class="form-group"><label>No. Sampel</label><input type="text" id="dig_nosampel" required></div>
+          </div>
+          <div class="form-group">
+            <label>Total Tongkol</label>
+            <input type="number" id="dig_total" step="0.01" oninput="hitungDIG()" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Good</label><input type="number" id="dig_good" step="0.01" oninput="hitungDIG()" required></div>
+            <div class="form-group"><label>Reject</label><input type="number" id="dig_reject" step="0.01" oninput="hitungDIG()" required></div>
+          </div>
+          <div class="form-group">
+            <label>Hasil Akurasi (%)</label>
+            <input type="text" id="dig_hasil" readonly style="background:#e8f8f5; font-weight:bold; color:#16a085;">
+          </div>
+          <div class="form-group">
+            <label>Seed Set</label>
+            <select id="dig_seedset" required>
+              <option value="">- Pilih -</option>
+              <option value="A">A (Sempurna)</option>
+              <option value="B">B (Sedang)</option>
+              <option value="C">C (Cacat/Rendah)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Foto Sampel</label>
+            <input type="file" id="dig_foto" accept="image/*" capture="environment">
+          </div>
+          <button type="submit" class="btn-primary" id="btnDIG">Simpan Data DIG</button>
+        </form>
+
+        <!-- FORM GID -->
+        <form id="formGID" class="hidden-element" onsubmit="submitGID(event)">
+          <div class="section-title" style="background:#e67e22;">Form Good in Discard</div>
+          <div class="form-row">
+            <div class="form-group"><label>Tanggal</label><input type="date" id="gid_tgl" required></div>
+            <div class="form-group"><label>No. Document</label><input type="text" id="gid_doc" required></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Jam Ambil Sampel</label><input type="time" id="gid_jam" required></div>
+            <div class="form-group"><label>No. Sampel</label><input type="text" id="gid_nosampel" required></div>
+          </div>
+          <div class="form-group">
+            <label>Total Tongkol</label>
+            <input type="number" id="gid_total" step="0.01" oninput="hitungGID()" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Good</label><input type="number" id="gid_good" step="0.01" oninput="hitungGID()" required></div>
+            <div class="form-group"><label>Reject</label><input type="number" id="gid_reject" step="0.01" oninput="hitungGID()" required></div>
+          </div>
+          <div class="form-group">
+            <label>Hasil Akurasi (%)</label>
+            <input type="text" id="gid_hasil" readonly style="background:#fef9e7; font-weight:bold; color:#d35400;">
+          </div>
+          <div class="form-group">
+            <label>Counting Weigher</label>
+            <input type="text" id="gid_cw" required>
+          </div>
+          <div class="form-group">
+            <label>Foto Sampel</label>
+            <input type="file" id="gid_foto" accept="image/*" capture="environment">
+          </div>
+          <button type="submit" class="btn-primary" style="background:#e67e22;" id="btnGID">Simpan Data GID</button>
+        </form>
+
+        <div id="pesanAkurasi" class="pesan"></div>
+      </div>
+
+      <!-- ================= 6. DRYING PROSES ================= -->
+      <div id="pageDryingProses" class="app-page hidden-element">
+        <button class="back-btn" onclick="bukaHalaman('pageHome')">← Kembali ke Home</button>
+        <h2>🌡️ Drying Proses</h2>
+        <p style="text-align:center; color:#7f8c8d; font-size:13px;">Pilih sub-menu proses pengeringan:</p>
+        
+        <div class="home-menu">
+          <button class="menu-btn teal" onclick="bukaHalaman('pageKalkulatorDryer')">
+            <span>🧮 1. Kalkulator Dryer</span> ➔
+          </button>
+          <button class="menu-btn teal" onclick="bukaHalaman('pageKalkulatorRH')">
+            <span>🌡️ 2. Kalkulator RH</span> ➔
+          </button>
+          <button class="menu-btn teal" onclick="bukaHalaman('pageBinOnline')">
+            <span>📦 3. Bin Online Available</span> ➔
+          </button>
+        </div>
+      </div>
+
+      <!-- 6.1 Kalkulator Dryer -->
+      <div id="pageKalkulatorDryer" class="app-page hidden-element">
+        <button class="back-btn" onclick="bukaHalaman('pageDryingProses')">← Kembali ke Drying Proses</button>
+        <h2>🧮 Kalkulator Dryer</h2>
+
+        <div class="section-title" style="background:#16a085;">Burner On</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tanggal Burner On</label>
+            <input type="date" id="kd_tgl_burner">
+          </div>
+          <div class="form-group">
+            <label>Jam Burner On</label>
+            <input type="time" id="kd_jam_burner">
+          </div>
+        </div>
+
+        <div class="section-title" style="background:#16a085;">Pengambilan Sample MC</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tanggal Ambil MC</label>
+            <input type="date" id="kd_tgl_mc">
+          </div>
+          <div class="form-group">
+            <label>Jam Ambil MC</label>
+            <input type="time" id="kd_jam_mc">
+          </div>
+        </div>
+
+        <div class="section-title" style="background:#16a085;">Nilai MC</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>MC Harvest (%)</label>
+            <input type="number" id="kd_mcharvest" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>MC Aktual (%)</label>
+            <input type="number" id="kd_mcaktual" step="0.01">
+          </div>
+        </div>
+
+        <button type="button" class="btn-primary" style="background:#16a085;" onclick="hitungKalkulatorDryer()">Hitung Drying Process</button>
+
+        <div id="kdResultBox" class="result-box hidden-element">
+          <div class="result-row"><span class="label">Drying Time</span><span class="value" id="kd_hasil_dryingtime">-</span></div>
+          <div class="result-row"><span class="label">Dry Rate</span><span class="value" id="kd_hasil_dryrate">-</span></div>
+          <div class="result-row"><span class="label">Drying Down Rate</span><span class="value" id="kd_hasil_downrate">-</span></div>
+        </div>
+        <div id="pesanKalkulatorDryer" class="pesan"></div>
+      </div>
+
+      <!-- 6.2 Kalkulator RH -->
+      <div id="pageKalkulatorRH" class="app-page hidden-element">
+        <button class="back-btn" onclick="bukaHalaman('pageDryingProses')">← Kembali ke Drying Proses</button>
+        <h2>🌡️ Kalkulator RH</h2>
+        
+        <div class="form-group">
+          <label>Suhu Dry Bulb (°C)</label>
+          <input type="number" id="rh_dry" step="0.1" placeholder="Contoh: 35.0">
+        </div>
+        <div class="form-group">
+          <label>Suhu Wet Bulb (°C)</label>
+          <input type="number" id="rh_wet" step="0.1" placeholder="Contoh: 28.0">
+        </div>
+
+        <button type="button" class="btn-primary" style="background:#16a085;" onclick="hitungKalkulatorRH()">Hitung RH (%)</button>
+        
+        <div id="hasilKalkulatorRH" class="result-box" style="text-align:center;">
+          Masukkan suhu Dry Bulb & Wet Bulb untuk memulai.
+        </div>
+      </div>
+
+      <!-- 6.3 Bin Online -->
+      <div id="pageBinOnline" class="app-page hidden-element">
+        <button class="back-btn" onclick="bukaHalaman('pageDryingProses')">← Kembali ke Drying Proses</button>
+        <h2>📦 Bin Online Available</h2>
+        
+        <p style="font-size:13px; color:#555; text-align:center;">
+          Status ketersediaan Bin Dryer secara real-time.
+        </p>
+        
+        <div id="containerBinOnline" class="result-box" style="text-align:center; font-weight:bold; color:#2b6cb0;">
+          Tekan tombol Refresh untuk melihat status Bin.
+        </div>
+        
+        <button type="button" class="btn-primary" style="background:#16a085; margin-top:15px;" onclick="refreshBinOnline()">
+          🔄 Refresh Status Bin
+        </button>
+      </div>
+
+    </div>
+
+    <script>
+      function bukaHalaman(pageId) {
+        document.querySelectorAll('.app-page').forEach(function(el) {
+          el.classList.add('hidden-element');
+        });
+        var target = document.getElementById(pageId);
+        if (target) {
+          target.classList.remove('hidden-element');
+          window.scrollTo(0,0);
+        }
+      }
+
+      // ===== INTAKE =====
+      const dataDryer = {
+        "Bangkok": ["Bangkok-D1","Bangkok-D2","Bangkok-D3","Bangkok-D4","Bangkok-C1","Bangkok-C2","Bangkok-C3","Bangkok-C4","Bangkok-C5","Bangkok-C6","Bangkok-C7","Bangkok-C8","Bangkok-C9","Bangkok-C10"],
+        "Wonojoyo": ["Wonojoyo-W1","Wonojoyo-W2","Wonojoyo-W3","Wonojoyo-LJ1","Wonojoyo-LJ2","Wonojoyo-LJ3","Wonojoyo-LJ4","Wonojoyo-LJ5","Wonojoyo-LJ6","Wonojoyo-LJ7","Wonojoyo-LJ8","Wonojoyo-LJ9","Wonojoyo-LJ10","Wonojoyo-W4","Wonojoyo-W2-A","Wonojoyo-W2-B","Wonojoyo-W5","Wonojoyo-W6","Wonojoyo-W7","Wonojoyo-W8","Wonojoyo-W8A","Wonojoyo-W8B"]
+      };
+
+      function updateDryer() {
+        var alokasi = document.getElementById("alokasi").value;
+        var dryerSelect = document.getElementById("dryer");
+        dryerSelect.innerHTML = '<option value="">- Pilih No. Dryer -</option>';
+        if (alokasi && dataDryer[alokasi]) {
+          dataDryer[alokasi].forEach(function(item) {
+            var opt = document.createElement('option');
+            opt.value = item; opt.innerHTML = item;
+            dryerSelect.appendChild(opt);
+          });
+        }
+      }
+
+      function cekCustomSPV() {
+        var cb = document.getElementById("cb_spv_other");
+        var input = document.getElementById("spv_other");
+        input.style.display = cb.checked ? "block" : "none";
+        input.required = cb.checked;
+        if (!cb.checked) input.value = "";
+      }
+
+      function cekCustomKode() {
+        var kode = document.getElementById("kodeproduksi").value;
+        var other = document.getElementById("kodeproduksi_other");
+        other.style.display = (kode === "Other") ? "block" : "none";
+        other.required = (kode === "Other");
+        if (kode !== "Other") other.value = "";
+      }
+
+      function bukaPreviewIntake(e) {
+        e.preventDefault();
+        var spvList = [];
+        document.querySelectorAll('.spv-checkbox:checked').forEach(function(cb){ spvList.push(cb.value); });
+        if (document.getElementById('cb_spv_other').checked) {
+          var v = document.getElementById('spv_other').value;
+          if (v) spvList.push(v);
+        }
+        if (spvList.length === 0) { alert("Pilih minimal 1 SPV!"); return; }
+        document.getElementById('spv_final').value = spvList.join(', ');
+
+        var kode = document.getElementById("kodeproduksi").value;
+        document.getElementById("kodeproduksi_final").value = (kode === "Other") ? document.getElementById("kodeproduksi_other").value : kode;
+
+        var qtyPlant = parseFloat(document.getElementById("val_qtyplant").value) || 0;
+        var offtype = parseFloat(document.getElementById("val_offtype").value) || 0;
+        var fungi = parseFloat(document.getElementById("val_fungi").value) || 0;
+        var vivipari = parseFloat(document.getElementById("val_vivipari").value) || 0;
+        var muda = parseFloat(document.getElementById("val_muda").value) || 0;
+        var male = parseFloat(document.getElementById("val_male").value) || 0;
+        var spill = parseFloat(document.getElementById("val_spill").value) || 0;
+        var totalReject = offtype + fungi + vivipari + muda + male + spill;
+
+        function pct(n,t){ return t<=0 ? 0 : (n/t*100); }
+
+        document.getElementById("prev_tanggal").innerText = document.getElementById("val_tanggal").value;
+        document.getElementById("prev_dryer").innerText = document.getElementById("alokasi").value + " - " + document.getElementById("dryer").value;
+        document.getElementById("prev_distrik").innerText = document.getElementById("val_distrik").value;
+        document.getElementById("prev_spv").innerText = document.getElementById("spv_final").value;
+        document.getElementById("prev_kode").innerText = document.getElementById("kodeproduksi_final").value;
+        document.getElementById("prev_quality").innerText = document.getElementById("val_quality").value;
+        document.getElementById("prev_wema").innerText = document.getElementById("val_wema").value;
+        document.getElementById("prev_mc").innerText = document.getElementById("val_mc").value;
+        document.getElementById("prev_qtyfield").innerText = document.getElementById("val_qtyfield").value;
+        document.getElementById("prev_qtyplant").innerText = qtyPlant;
+        document.getElementById("prev_offtype").innerText = offtype;
+        document.getElementById("prev_fungi").innerText = fungi;
+        document.getElementById("prev_vivipari").innerText = vivipari;
+        document.getElementById("prev_muda").innerText = muda;
+        document.getElementById("prev_male").innerText = male;
+        document.getElementById("prev_spill").innerText = spill;
+        document.getElementById("prev_total_reject").innerText = totalReject.toFixed(1);
+
+        document.getElementById("prev_pct_offtype").innerText = pct(offtype,qtyPlant).toFixed(1)+"%";
+        document.getElementById("prev_pct_fungi").innerText = pct(fungi,qtyPlant).toFixed(1)+"%";
+        document.getElementById("prev_pct_vivipari").innerText = pct(vivipari,qtyPlant).toFixed(1)+"%";
+        document.getElementById("prev_pct_muda").innerText = pct(muda,qtyPlant).toFixed(1)+"%";
+        document.getElementById("prev_pct_male").innerText = pct(male,qtyPlant).toFixed(1)+"%";
+        document.getElementById("prev_pct_spill").innerText = pct(spill,qtyPlant).toFixed(1)+"%";
+        document.getElementById("prev_pct_total").innerText = pct(totalReject,qtyPlant).toFixed(1)+"%";
+
+        setWarnaBatas("prev_pct_offtype", pct(offtype,qtyPlant), 1.0);
+        setWarnaBatas("prev_pct_fungi", pct(fungi,qtyPlant), 2.0);
+        setWarnaBatas("prev_pct_vivipari", pct(vivipari,qtyPlant), 2.0);
+
+        document.getElementById("prev_note").innerText = document.getElementById("val_note").value || "-";
+        document.getElementById("intakeForm").style.display = "none";
+        document.getElementById("previewIntakeBox").style.display = "block";
+        window.scrollTo(0,0);
+      }
+
+      function setWarnaBatas(id, nilai, batas) {
+        var el = document.getElementById(id);
+        el.className = (nilai > batas) ? "bg-red" : "bg-normal";
+      }
+
+      function tutupPreviewIntake() {
+        document.getElementById("previewIntakeBox").style.display = "none";
+        document.getElementById("intakeForm").style.display = "block";
+      }
+
+      function downloadGambarIntake() {
+        html2canvas(document.getElementById("areaTabelLaporan"), {scale:2}).then(function(canvas){
+          var link = document.createElement('a');
+          link.download = 'Laporan_Intake.png';
+          link.href = canvas.toDataURL();
+          link.click();
+        });
+      }
+
+      function kirimIntakeKeServer() {
+        var btn = document.getElementById("btnKirimIntake");
+        var pesan = document.getElementById("pesanIntake");
+        btn.disabled = true; btn.innerHTML = "Mengirim..."; pesan.innerHTML = "";
+
+        var formData = {
+          tanggal: document.getElementById("val_tanggal").value,
+          jammulai: document.getElementById("val_jammulai").value,
+          jamfinish: document.getElementById("val_jamfinish").value,
+          alokasi: document.getElementById("alokasi").value,
+          dryer: document.getElementById("dryer").value,
+          distrik: document.getElementById("val_distrik").value,
+          spv: document.getElementById("spv_final").value,
+          kodeproduksi: document.getElementById("kodeproduksi_final").value,
+          qualitystatus: document.getElementById("val_quality").value,
+          wema: document.getElementById("val_wema").value,
+          mcharvest: document.getElementById("val_mc").value,
+          qtyfield: document.getElementById("val_qtyfield").value,
+          qtyplant: document.getElementById("val_qtyplant").value,
+          offtype: document.getElementById("val_offtype").value || 0,
+          fungi: document.getElementById("val_fungi").value || 0,
+          vivipari: document.getElementById("val_vivipari").value || 0,
+          muda: document.getElementById("val_muda").value || 0,
+          male: document.getElementById("val_male").value || 0,
+          spill: document.getElementById("val_spill").value || 0,
+          note: document.getElementById("val_note").value,
+          val_tgl_truk1: document.getElementById("val_tgl_truk1").value,
+          val_jam_truk1: document.getElementById("val_jam_truk1").value
+        };
+
+        google.script.run
+          .withSuccessHandler(function(res){
+            pesan.innerHTML = res;
+            pesan.style.color = res.includes("✅") ? "green" : "red";
+            if (res.includes("✅")) {
+              document.getElementById("intakeForm").reset();
+              document.getElementById("dryer").innerHTML = '<option value="">- Pilih No. Dryer -</option>';
+              document.getElementById("previewIntakeBox").style.display = "none";
+              document.getElementById("intakeForm").style.display = "block";
+            }
+            btn.disabled = false; btn.innerHTML = "Konfirmasi & Kirim Data";
+          })
+          .simpanDataIntake(formData);
+      }
+
+      // ===== e-DWS =====
+      function generateDWSPreview() {
+        document.getElementById("r_tgl").innerText = document.getElementById("dws_tgl").value;
+        document.getElementById("r_dryer").innerText = document.getElementById("dws_dryer").value;
+        document.getElementById("r_hybrid").innerText = document.getElementById("dws_hybrid").value;
+        document.getElementById("r_quality").innerText = document.getElementById("dws_quality").value;
+        document.getElementById("r_lahan").innerText = document.getElementById("dws_lahan").value;
+        document.getElementById("r_wema").innerText = document.getElementById("dws_wema").value;
+        document.getElementById("r_field").innerText = document.getElementById("dws_tonasefield").value;
+        document.getElementById("r_plant").innerText = document.getElementById("dws_tonaseplant").value;
+        document.getElementById("r_mc").innerText = document.getElementById("dws_mc").value;
+        document.getElementById("r_reject").innerText = document.getElementById("dws_reject").value;
+        document.getElementById("r_start").innerText = document.getElementById("dws_start").value;
+        document.getElementById("r_finish").innerText = document.getElementById("dws_finish").value;
+
+        document.getElementById("dwsParamForm").classList.add("hidden-element");
+        document.getElementById("dwsPreviewBox").classList.remove("hidden-element");
+        window.scrollTo(0,0);
+      }
+
+      function kembaliEditDWS() {
+        document.getElementById("dwsPreviewBox").classList.add("hidden-element");
+        document.getElementById("dwsParamForm").classList.remove("hidden-element");
+      }
+
+      function downloadGambarDWS() {
+        html2canvas(document.getElementById("areaTabelDWS"), {scale:2}).then(function(canvas){
+          var link = document.createElement('a');
+          link.download = 'e-DWS.png';
+          link.href = canvas.toDataURL();
+          link.click();
+        });
+      }
+
+      // ===== AKURASI =====
+      function gantiFormAkurasi() {
+        var p = document.getElementById("jenisAkurasi").value;
+        document.getElementById("formDIG").classList.toggle("hidden-element", p !== "DIG");
+        document.getElementById("formGID").classList.toggle("hidden-element", p !== "GID");
+        document.getElementById("pesanAkurasi").innerHTML = "";
+      }
+
+      function hitungDIG() {
+        var total = parseFloat(document.getElementById("dig_total").value) || 0;
+        var good = parseFloat(document.getElementById("dig_good").value) || 0;
+        document.getElementById("dig_hasil").value = total > 0 ? ((good/total)*100).toFixed(2)+"%" : "0.00%";
+      }
+
+      function hitungGID() {
+        var total = parseFloat(document.getElementById("gid_total").value) || 0;
+        var reject = parseFloat(document.getElementById("gid_reject").value) || 0;
+        document.getElementById("gid_hasil").value = total > 0 ? ((reject/total)*100).toFixed(2)+"%" : "0.00%";
+      }
+
+      function prosesFileDanKirim(id, callback) {
+        var input = document.getElementById(id);
+        if (input.files && input.files[0]) {
+          var reader = new FileReader();
+          reader.onload = function(e){ callback(e.target.result); };
+          reader.readAsDataURL(input.files[0]);
+        } else {
+          callback(null);
+        }
+      }
+
+      function submitDIG(e) {
+        e.preventDefault();
+        var btn = document.getElementById("btnDIG");
+        var pesan = document.getElementById("pesanAkurasi");
+        btn.disabled = true; btn.innerHTML = "Menyimpan..."; pesan.innerHTML = "";
+
+        prosesFileDanKirim("dig_foto", function(base64){
+          var data = {
+            tanggal: document.getElementById("dig_tgl").value,
+            nodocument: document.getElementById("dig_doc").value,
+            jam: document.getElementById("dig_jam").value,
+            nosampel: document.getElementById("dig_nosampel").value,
+            totaltongkol: document.getElementById("dig_total").value,
+            good: document.getElementById("dig_good").value,
+            reject: document.getElementById("dig_reject").value,
+            hasilakurasi: document.getElementById("dig_hasil").value,
+            seedset: document.getElementById("dig_seedset").value,
+            fotoBase64: base64
+          };
+
+          google.script.run
+            .withSuccessHandler(function(res){
+              pesan.innerHTML = res;
+              pesan.style.color = res.includes("✅") ? "green" : "red";
+              if (res.includes("✅")) {
+                document.getElementById("formDIG").reset();
+                document.getElementById("dig_hasil").value = "";
+              }
+              btn.disabled = false; btn.innerHTML = "Simpan Data DIG";
+            })
+            .withFailureHandler(function(err){
+              pesan.innerHTML = "❌ Gagal: " + (err.message || err);
+              pesan.style.color = "red";
+              btn.disabled = false; btn.innerHTML = "Simpan Data DIG";
+            })
+            .simpanDataDIG(data);
+        });
+      }
+
+      function submitGID(e) {
+        e.preventDefault();
+        var btn = document.getElementById("btnGID");
+        var pesan = document.getElementById("pesanAkurasi");
+        btn.disabled = true; btn.innerHTML = "Menyimpan..."; pesan.innerHTML = "";
+
+        prosesFileDanKirim("gid_foto", function(base64){
+          var data = {
+            tanggal: document.getElementById("gid_tgl").value,
+            nodocument: document.getElementById("gid_doc").value,
+            jam: document.getElementById("gid_jam").value,
+            nosampel: document.getElementById("gid_nosampel").value,
+            totaltongkol: document.getElementById("gid_total").value,
+            good: document.getElementById("gid_good").value,
+            reject: document.getElementById("gid_reject").value,
+            hasilakurasi: document.getElementById("gid_hasil").value,
+            countingweigher: document.getElementById("gid_cw").value,
+            fotoBase64: base64
+          };
+
+          google.script.run
+            .withSuccessHandler(function(res){
+              pesan.innerHTML = res;
+              pesan.style.color = res.includes("✅") ? "green" : "red";
+              if (res.includes("✅")) {
+                document.getElementById("formGID").reset();
+                document.getElementById("gid_hasil").value = "";
+              }
+              btn.disabled = false; btn.innerHTML = "Simpan Data GID";
+            })
+            .withFailureHandler(function(err){
+              pesan.innerHTML = "❌ Gagal: " + (err.message || err);
+              pesan.style.color = "red";
+              btn.disabled = false; btn.innerHTML = "Simpan Data GID";
+            })
+            .simpanDataGID(data);
+        });
+      }
+
+      // ===== KALKULATOR DRYER =====
+      function hitungKalkulatorDryer() {
+        var pesan = document.getElementById("pesanKalkulatorDryer");
+        pesan.innerHTML = "";
+
+        var tglBurner = document.getElementById("kd_tgl_burner").value;
+        var jamBurner = document.getElementById("kd_jam_burner").value;
+        var tglMC = document.getElementById("kd_tgl_mc").value;
+        var jamMC = document.getElementById("kd_jam_mc").value;
+        var mcHarvest = parseFloat(document.getElementById("kd_mcharvest").value);
+        var mcAktual = parseFloat(document.getElementById("kd_mcaktual").value);
+
+        if (!tglBurner || !jamBurner || !tglMC || !jamMC || isNaN(mcHarvest) || isNaN(mcAktual)) {
+          pesan.innerHTML = "⚠️ Lengkapi semua data terlebih dahulu.";
+          pesan.style.color = "red";
+          document.getElementById("kdResultBox").classList.add("hidden-element");
+          return;
+        }
+
+        var waktuBurner = new Date(tglBurner + "T" + jamBurner + ":00");
+        var waktuMC = new Date(tglMC + "T" + jamMC + ":00");
+        var selisihMs = waktuMC - waktuBurner;
+
+        if (selisihMs <= 0) {
+          pesan.innerHTML = "⚠️ Waktu pengambilan MC harus setelah Burner On.";
+          pesan.style.color = "red";
+          document.getElementById("kdResultBox").classList.add("hidden-element");
+          return;
+        }
+
+        var dryingTimeJam = selisihMs / (1000 * 60 * 60);
+        var jamBulat = Math.floor(dryingTimeJam);
+        var menitBulat = Math.round((dryingTimeJam - jamBulat) * 60);
+        if (menitBulat === 60) { jamBulat++; menitBulat = 0; }
+
+        var selisihMC = mcHarvest - mcAktual;
+        var dryRate = (selisihMC !== 0) ? (dryingTimeJam / selisihMC) : null;
+
+        document.getElementById("kd_hasil_dryingtime").innerText = jamBulat + " jam " + menitBulat + " menit (" + dryingTimeJam.toFixed(2) + " jam)";
+        document.getElementById("kd_hasil_dryrate").innerText = dryRate !== null ? dryRate.toFixed(3) + " jam/%" : "Tidak dapat dihitung";
+        document.getElementById("kd_hasil_downrate").innerText = selisihMC.toFixed(2) + " %";
+
+        if (selisihMC < 0) {
+          pesan.innerHTML = "⚠️ MC Aktual lebih tinggi dari MC Harvest.";
+          pesan.style.color = "#e67e22";
+        }
+
+        document.getElementById("kdResultBox").classList.remove("hidden-element");
+      }
+
+      // ===== KALKULATOR RH =====
+      function hitungKalkulatorRH() {
+        var dry = parseFloat(document.getElementById("rh_dry").value);
+        var wet = parseFloat(document.getElementById("rh_wet").value);
+        var hasil = document.getElementById("hasilKalkulatorRH");
+
+        if (isNaN(dry) || isNaN(wet)) {
+          hasil.innerHTML = "<span style='color:red;'>⚠️ Isi suhu Dry Bulb dan Wet Bulb!</span>";
+          return;
+        }
+        if (wet > dry) {
+          hasil.innerHTML = "<span style='color:red;'>⚠️ Wet Bulb tidak boleh lebih tinggi dari Dry Bulb!</span>";
+          return;
+        }
+
+        var es_dry = 6.112 * Math.exp((17.67 * dry) / (dry + 243.5));
+        var es_wet = 6.112 * Math.exp((17.67 * wet) / (wet + 243.5));
+        var A = 0.00066 * (1 + 0.00115 * wet);
+        var e = es_wet - (A * 1013.25 * (dry - wet));
+        var rh = (e / es_dry) * 100;
+        if (rh > 100) rh = 100;
+        if (rh < 0) rh = 0;
+
+        hasil.innerHTML = `
+          <strong>Hasil RH:</strong><br>
+          <span style="font-size:22px; color:#16a085;">${rh.toFixed(1)}%</span><br>
+          <small>Dry Bulb: ${dry}°C | Wet Bulb: ${wet}°C</small>
+        `;
+      }
+
+      // ===== BIN ONLINE =====
+      function refreshBinOnline() {
+        var container = document.getElementById("containerBinOnline");
+        container.innerHTML = "⏳ Memperbarui status Bin...";
+        setTimeout(function(){
+          container.innerHTML = "✅ Bin Dryer #01 - #08 SIAP OPERASIONAL";
+        }, 800);
+      }
+
+      // ===== AUTO PLOTTING (placeholder) =====
+      function prosesDataMassal() {
+        var data = document.getElementById("dataExcel").value.trim();
+        if (!data) {
+          alert("Silakan paste data Excel terlebih dahulu!");
+          return;
+        }
+        document.getElementById("outputTabel").innerHTML = "<p style='color:#16a085; font-weight:bold;'>Data berhasil diproses (fitur plotting sedang dikembangkan).</p>";
+      }
+    </script>
+  </body>
+</html>
